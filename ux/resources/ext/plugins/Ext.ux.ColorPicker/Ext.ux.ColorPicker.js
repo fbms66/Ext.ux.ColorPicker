@@ -1,23 +1,23 @@
- Ext.define('Ext.ux.ColorPicker', {
+Ext.define('Ext.ux.ColorPicker', {
     extend: 'Ext.form.field.Text',
-    alias : 'widget.colorcombo',
+    alias: 'widget.colorcombo',
 
     regex: /^\#[0-9A-F]{6}$/i,
     allowBlank: false,
     setOnChange: 'background',
 
-    config : {
-        luminanceImg : 'ux/resources/ext/plugins/Ext.ux.ColorPicker/luminance.png',
-        spectrumImg : 'ux/resources/ext/plugins/Ext.ux.ColorPicker/spectrum.png',
-        value : '#FFFFFF'
+    config: {
+        luminanceImg: 'ux/resources/ext/plugins/Ext.ux.ColorPicker/luminance.png',
+        spectrumImg: 'ux/resources/ext/plugins/Ext.ux.ColorPicker/spectrum.png',
+        value: '#FFFFFF'
     },
 
-    triggers : {
-        select : {
-            handler : function (self) {
+    triggers: {
+        select: {
+            handler: function(self) {
                 var me = this;
-				
-				if (me.disabled) {
+
+                if (me.disabled) {
                     return;
                 }
 
@@ -25,7 +25,7 @@
                     this.menu = Ext.create('Ext.menu.Menu', {
                         plain: true,
                         showSeparator: false,
-                        bodyStyle : 'margin-top: 24px; padding-bottom: 24px;',
+                        bodyStyle: 'margin-top: 24px; padding-bottom: 24px;',
                         shadowOffset: 24,
                         items: [{
                             xtype: 'box',
@@ -35,11 +35,11 @@
                                 width: 195,
                                 cls: 'ux-color-picker'
                             },
-                            getParent: function () {
+                            getParent: function() {
                                 this.up('form');
                             },
                             listeners: {
-                                render: function () {
+                                render: function() {
                                     var pickerCanvas = document.createElement('div');
                                     pickerCanvas.className = 'ux-color-picker-canvas';
 
@@ -56,14 +56,14 @@
         }
     },
 
-    contrastColor: function (color, threshold) {
+    contrastColor: function(color, threshold) {
         threshold = threshold || 160;
         var grayscale = (0.2126 * color[0]) + (0.7152 * color[1]) + (0.0722 * color[2]);
         return (grayscale > threshold) ? '#000' : '#FFF';
     },
 
     listeners: {
-        select: function () {
+        select: function() {
             var input = document.getElementById(this.id + '-inputEl');
 
             if (this.setOnChange == 'background') {
@@ -80,14 +80,14 @@
             }
         },
 
-        afterrender: function () {
+        afterrender: function() {
             this.fireEvent('select');
         }
     },
 
-    drawSpectrum: function () {
+    drawSpectrum: function() {
         var me = this;
-		
+
         !me.isValid() && me.setValue('#FFFFFF');
         me.spectrum = this.drawSpace.appendChild(document.createElement('canvas'));
 
@@ -97,13 +97,13 @@
         me.spectrum.setAttribute('class', 'ux-color-picker-spectrum');
 
         var img = new Image();
-        img.onload = function () {
+        img.onload = function() {
             ctx.drawImage(img, 0, 0);
         };
         img.src = me.spectrumImg;
         me.drawLuminance();
 
-        Ext.get(me.spectrum).on('click', function (e, spec) {
+        Ext.get(me.spectrum).on('click', function(e, spec) {
             function toHex(r, g, b) {
                 var hex = '0123456789ABCDEF';
                 return '#' + (
@@ -114,10 +114,10 @@
 
             ctx = me.spectrum.getContext('2d');
 
-			var mousePos = {
-				x : e.getXY()[0] - Ext.get(spec).getLeft(),
-				y : e.getXY()[1] - Ext.get(spec).getTop()
-			};
+            var mousePos = {
+                x: e.getXY()[0] - Ext.get(spec).getLeft(),
+                y: e.getXY()[1] - Ext.get(spec).getTop()
+            };
 
             try {
                 var imgData = ctx.getImageData(mousePos.x, mousePos.y, 1, 1);
@@ -125,7 +125,7 @@
                 return;
             }
 
-			// TODO: Finish this method.
+            // TODO: Finish this method.
             //me.drawMarker(mousePos.x, mousePos.y, 4);
 
             if (imgData.data[3] == 0) {
@@ -135,7 +135,7 @@
                 if (imgData.data[3] == 0) {
                     return;
                 }
-				
+
                 me.setValue(toHex(imgData.data[0], imgData.data[1], imgData.data[2]));
             } else {
                 me.setValue(toHex(imgData.data[0], imgData.data[1], imgData.data[2]));
@@ -146,8 +146,8 @@
         })
     },
 
-	// Future method, draws a circle around mouse X,Y point.
-    drawMarker : function(xPos, yPos, radius) {
+    // Future method, draws a circle around mouse X,Y point.
+    drawMarker: function(xPos, yPos, radius) {
         var me = this;
 
         if (!me.marker) {
@@ -168,11 +168,11 @@
         ctx.stroke();
     },
 
-    drawLuminance: function () {
+    drawLuminance: function() {
         var me = this;
-		var radius = 65;
-		var xOff = 2.5;
-		var yOff = 2;
+        var radius = 65;
+        var xOff = 2.5;
+        var yOff = 2;
 
         if (!me.luminance) {
             me.luminance = el.appendChild(document.createElement('canvas'));
@@ -183,10 +183,10 @@
 
         var ctx = me.luminance.getContext('2d');
 
-		var center = {
-			x : (me.luminance.width / 2) - xOff,
-			y : (me.luminance.height / 2) - yOff
-		};
+        var center = {
+            x: (me.luminance.width / 2) - xOff,
+            y: (me.luminance.height / 2) - yOff
+        };
 
         ctx.clearRect(0, 0, me.luminance.width, me.luminance.height);
         ctx.beginPath();
@@ -197,7 +197,7 @@
         ctx.fill();
 
         var img = new Image();
-        img.onload = function () {
+        img.onload = function() {
             ctx.drawImage(img, center.x - radius, center.y - radius);
         };
         img.src = me.luminanceImg;
