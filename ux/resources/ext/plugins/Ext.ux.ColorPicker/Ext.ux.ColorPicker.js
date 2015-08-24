@@ -14,16 +14,19 @@
 
     triggers : {
         select : {
-            handler : function (b) {
-                if (this.disabled) {
+            handler : function (self) {
+                var me = this;
+				
+				if (me.disabled) {
                     return;
                 }
 
-                var a = this;
                 if (!this.menu) {
                     this.menu = Ext.create('Ext.menu.Menu', {
                         plain: true,
                         showSeparator: false,
+                        bodyStyle : 'margin-top: 24px; padding-bottom: 24px;',
+                        shadowOffset: 24,
                         items: [{
                             xtype: 'box',
                             autoEl: {
@@ -41,34 +44,34 @@
                                     pickerCanvas.className = 'ux-color-picker-canvas';
 
                                     el = this.el.dom.appendChild(pickerCanvas);
-                                    a.drawSpace = el;
-                                    a.drawSpectrum();
+                                    me.drawSpace = el;
+                                    me.drawSpectrum();
                                 }
                             }
                         }]
                     })
                 }
-                this.menu.showAt(b.getXY());
+                this.menu.showAt(self.getXY());
             }
         }
     },
 
-    contrastColor: function (b, a) {
-        a = a || 160;
-        var c = (0.2126 * b[0]) + (0.7152 * b[1]) + (0.0722 * b[2]);
-        return (c > a) ? '#000' : '#FFF';
+    contrastColor: function (color, threshold) {
+        threshold = threshold || 160;
+        var grayscale = (0.2126 * color[0]) + (0.7152 * color[1]) + (0.0722 * color[2]);
+        return (grayscale > threshold) ? '#000' : '#FFF';
     },
 
     listeners: {
         select: function () {
-            var a = document.getElementById(this.id + '-inputEl');
+            var input = document.getElementById(this.id + '-inputEl');
 
             if (this.setOnChange == 'background') {
-                a.style.backgroundColor = this.getValue();
-                a.style.color = this.contrastColor(this.getValue());
+                input.style.backgroundColor = this.getValue();
+                input.style.color = this.contrastColor(this.getValue());
             } else {
                 if (this.setOnChange == 'color') {
-                    a.style.color = this.getValue();
+                    input.style.color = this.getValue();
                 } else {
                     if (typeof this.setOnChange == 'function') {
                         this.setOnChange();
@@ -81,83 +84,122 @@
             this.fireEvent('select');
         }
     },
+
     drawSpectrum: function () {
-        var a = this;
-        !a.isValid() && a.setValue('#FFFFFF');
-        a.spectrum = this.drawSpace.appendChild(document.createElement('canvas'));
+        var me = this;
+		
+        !me.isValid() && me.setValue('#FFFFFF');
+        me.spectrum = this.drawSpace.appendChild(document.createElement('canvas'));
 
-        var b = a.spectrum.getContext('2d');
-        a.spectrum.setAttribute('width', '200');
-        a.spectrum.setAttribute('height', '200');
-        a.spectrum.setAttribute('class', 'ux-color-picker-spectrum');
+        var ctx = me.spectrum.getContext('2d');
+        me.spectrum.setAttribute('width', '200');
+        me.spectrum.setAttribute('height', '200');
+        me.spectrum.setAttribute('class', 'ux-color-picker-spectrum');
 
-        var c = new Image();
-        c.onload = function () {
-            b.drawImage(c, 0, 0);
+        var img = new Image();
+        img.onload = function () {
+            ctx.drawImage(img, 0, 0);
         };
-        c.src = a.spectrumImg;
-        a.drawLuminance();
+        img.src = me.spectrumImg;
+        me.drawLuminance();
 
-        Ext.get(a.spectrum).on('click', function (h, d) {
-            function i(l, k, e) {
-                var j = '0123456789ABCDEF';
+        Ext.get(me.spectrum).on('click', function (e, spec) {
+            function toHex(r, g, b) {
+                var hex = '0123456789ABCDEF';
                 return '#' + (
-                    j[parseInt(l / 16)] + j[parseInt(l % 16)] +
-                    j[parseInt(k / 16)] + j[parseInt(k % 16)] +
-                    j[parseInt(e / 16)] + j[parseInt(e % 16)])
+                    hex[parseInt(r / 16)] + hex[parseInt(r % 16)] +
+                    hex[parseInt(g / 16)] + hex[parseInt(g % 16)] +
+                    hex[parseInt(b / 16)] + hex[parseInt(b % 16)])
             }
 
-            b = a.spectrum.getContext('2d');
-            var g = [h.getXY()[0] - Ext.get(d).getLeft(), h.getXY()[1] - Ext.get(d).getTop()];
+            ctx = me.spectrum.getContext('2d');
+
+			var mousePos = {
+				x : e.getXY()[0] - Ext.get(spec).getLeft(),
+				y : e.getXY()[1] - Ext.get(spec).getTop()
+			};
 
             try {
-                var f = b.getImageData(g[0], g[1], 1, 1)
-            } catch (h) {
-                return
+                var imgData = ctx.getImageData(mousePos.x, mousePos.y, 1, 1);
+            } catch (e) {
+                return;
             }
 
-            if (f.data[3] == 0) {
-                b = a.luminance.getContext('2d');
-                f = b.getImageData(g[0], g[1], 1, 1);
+			// TODO: Finish this method.
+            //me.drawMarker(mousePos.x, mousePos.y, 4);
 
-                if (f.data[3] == 0) {
+            if (imgData.data[3] == 0) {
+                ctx = me.luminance.getContext('2d');
+                imgData = ctx.getImageData(mousePos.x, mousePos.y, 1, 1);
+
+                if (imgData.data[3] == 0) {
                     return;
                 }
-                a.setValue(i(f.data[0], f.data[1], f.data[2]));
+				
+                me.setValue(toHex(imgData.data[0], imgData.data[1], imgData.data[2]));
             } else {
-                a.setValue(i(f.data[0], f.data[1], f.data[2]));
-                a.drawLuminance();
+                me.setValue(toHex(imgData.data[0], imgData.data[1], imgData.data[2]));
+                me.drawLuminance();
             }
 
-            a.fireEvent('select');
+            me.fireEvent('select');
         })
     },
 
-    drawLuminance: function () {
-        var b = this;
+	// Future method, draws a circle around mouse X,Y point.
+    drawMarker : function(xPos, yPos, radius) {
+        var me = this;
 
-        if (!b.luminance) {
-            b.luminance = el.appendChild(document.createElement('canvas'));
-            b.luminance.setAttribute('width', '200');
-            b.luminance.setAttribute('height', '200');
-            b.luminance.setAttribute('class', 'ux-color-picker-luminance');
+        if (!me.marker) {
+            me.marker = el.appendChild(document.createElement('canvas'));
+            me.marker.setAttribute('width', '200');
+            me.marker.setAttribute('height', '200');
+            me.marker.setAttribute('class', 'ux-color-picker-marker');
         }
 
-        var c = b.luminance.getContext('2d');
-        var a = [97.5, 98];
+        var ctx = me.marker.getContext('2d');
 
-        c.clearRect(0, 0, b.luminance.width, b.luminance.height);
-        c.beginPath();
-        c.fillStyle = b.getValue();
-        c.strokeStyle = b.getValue();
-        c.arc(a[0], a[0], 65, 0, 2 * Math.PI, false);
-        c.closePath();
-        c.fill();
+        ctx.clearRect(0, 0, me.marker.width, me.marker.height);
 
-        var d = new Image();
-        d.onload = function () {
-            c.drawImage(d, 33, 32);
+        ctx.beginPath();
+        ctx.arc(xPos, yPos, radius, 4, 0, 2 * Math.PI, false);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#444444';
+        ctx.stroke();
+    },
+
+    drawLuminance: function () {
+        var me = this;
+		var radius = 65;
+		var xOff = 2.5;
+		var yOff = 2;
+
+        if (!me.luminance) {
+            me.luminance = el.appendChild(document.createElement('canvas'));
+            me.luminance.setAttribute('width', '200');
+            me.luminance.setAttribute('height', '200');
+            me.luminance.setAttribute('class', 'ux-color-picker-luminance');
+        }
+
+        var ctx = me.luminance.getContext('2d');
+
+		var center = {
+			x : (me.luminance.width / 2) - xOff,
+			y : (me.luminance.height / 2) - yOff
+		};
+
+        ctx.clearRect(0, 0, me.luminance.width, me.luminance.height);
+        ctx.beginPath();
+        ctx.fillStyle = me.getValue();
+        ctx.strokeStyle = me.getValue();
+        ctx.arc(center.x, center.y, radius, 0, 2 * Math.PI, false);
+        ctx.closePath();
+        ctx.fill();
+
+        var img = new Image();
+        img.onload = function () {
+            ctx.drawImage(img, center.x - radius, center.y - radius);
         };
-        d.src = b.luminanceImg;
+        img.src = me.luminanceImg;
     }
 });

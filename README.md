@@ -12,7 +12,7 @@ Requires canvas support and is based on a standard `Ext.form.field.Text` field w
 
 ## Usage
 
-Specify the location of the luminance and spectrum.png images, by setting the luminanceImg and spectrumImg properties on the object (or replacing the two related incidences in the main JS). E.g. 
+Specify the location of the luminance and spectrum images, by setting the `luminanceImg` and `spectrumImg` properties on the object (or replacing the two related incidences in the main JS). E.g. 
 
 ```javascript
 Ext.onReady(function() {
@@ -26,6 +26,6 @@ Ext.onReady(function() {
 }); 
 ```
 
-Additionally, you can pass a HEX color to `value` to initialize the field with a color already selected.
+Additionally, you can pass a HEX color to the `value` property to initialize the field with a pre-selected color.
 
   [1]: http://creativecommons.org/licenses/by-sa/3.0/
